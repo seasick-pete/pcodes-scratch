@@ -1,5 +1,0 @@
-GET https://api.os.uk/search/places/v1/postcode?postcode=ex79rf HTTP/1.1
-
-key: tXVGmsJc4og29x50rf8JOl5yI70JVT6K
-Authorization: Bearer 1ch1U73InusjAckN
-Accept: */*

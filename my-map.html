@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Places</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.6.0/ol.css">
+  <style>
+    html, body, #map {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .ol-popup {
+    position: absolute;
+    background: white;
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    min-width: 180px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .ol-popup-closer {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    text-decoration: none;
+    color: #333;
+    }
+    .ol-popup-closer:after {
+    content: "✖";
+    }
+
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="popup" class="ol-popup">
+  <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+  <div id="popup-content"></div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/ol@v10.6.0/dist/ol.js"></script>
+
+<script>
+// =====================
+// DATA
+// =====================
+
+const DATA = [
+{postcode:"BA1 0AA",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"A",type:"resi",volume:5},
+{postcode:"BA1 0AD",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"B",type:"resi",volume:10},
+{postcode:"BA1 0AH",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"C",type:"resi",volume:15},
+{postcode:"BA1 0AN",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"D",type:"resi",volume:20},
+{postcode:"BA1 0AU",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"E",type:"resi",volume:25},
+{postcode:"BA1 0AZ",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"F",type:"resi",volume:30},
+{postcode:"BA1 0BA",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"G",type:"resi",volume:35},
+{postcode:"BA1 0BG",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"H",type:"resi",volume:40},
+{postcode:"BA1 0BL",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"I",type:"resi",volume:45},
+{postcode:"BA1 0BS",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"J",type:"resi",volume:50},
+{postcode:"BA1 0BT",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"K",type:"resi",volume:55},
+{postcode:"BA1 0BU",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"L",type:"resi",volume:60},
+{postcode:"BA1 0BZ",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"M",type:"resi",volume:65},
+{postcode:"BA1 0DF",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"N",type:"resi",volume:70},
+{postcode:"BA1 0DH",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"O",type:"resi",volume:75},
+{postcode:"BA1 0DT",longitude:-2.35556010905454,latitude:51.3788456711567,firm:"P",type:"resi",volume:80},
+{postcode:"EX8 3DN",longitude:-3.40970047181607,latitude:50.6292760041143,firm:"A",type:"resi",volume:5},
+{postcode:"EX8 3DP",longitude:-3.41203878489478,latitude:50.6285102109754,firm:"B",type:"resi",volume:10},
+{postcode:"EX8 3DR",longitude:-3.41200914227874,latitude:50.6275212678689,firm:"C",type:"resi",volume:15},
+{postcode:"EX8 3DS",longitude:-3.40923278501975,latitude:50.6264036866585,firm:"D",type:"resi",volume:20},
+{postcode:"EX8 3DT",longitude:-3.40894270650079,latitude:50.6266320360398,firm:"E",type:"resi",volume:25},
+{postcode:"EX8 3DW",longitude:-3.41137855908873,latitude:50.6305417828865,firm:"F",type:"resi",volume:30},
+{postcode:"EX8 3DX",longitude:-3.4098841052937,latitude:50.6278527829088,firm:"G",type:"resi",volume:35},
+{postcode:"EX8 3DY",longitude:-3.40926517727718,latitude:50.6279592001998,firm:"H",type:"resi",volume:40},
+{postcode:"EX8 3DZ",longitude:-3.40920290722448,latitude:50.6306040920438,firm:"I",type:"resi",volume:45},
+{postcode:"EX8 3EA",longitude:-3.40993788065701,latitude:50.6324838694214,firm:"J",type:"resi",volume:50},
+{postcode:"EX8 3ED",longitude:-3.41093219067081,latitude:50.6326337176541,firm:"K",type:"resi",volume:55},
+{postcode:"EX8 3EE",longitude:-3.41292778475303,latitude:50.6265657990932,firm:"L",type:"resi",volume:60},
+{postcode:"EX8 3EF",longitude:-3.41308087337605,latitude:50.6274273335967,firm:"M",type:"resi",volume:65},
+{postcode:"EX8 3EG",longitude:-3.41490185227444,latitude:50.6292129596178,firm:"N",type:"resi",volume:70},
+{postcode:"EX8 3EH",longitude:-3.41318826811147,latitude:50.6319498367857,firm:"O",type:"resi",volume:75},
+{postcode:"EX8 3EJ",longitude:-3.41235337728438,latitude:50.6324006496904,firm:"P",type:"resi",volume:80},
+{postcode:"EX8 3EL",longitude:-3.41338917101409,latitude:50.6282779914747,firm:"Q",type:"resi",volume:85}
+];
+
+// =====================
+// MAP
+// =====================
+
+const map = new ol.Map({
+  target: 'map',
+  layers: [
+    new ol.layer.Tile({
+      source: new ol.source.OSM()
+    })
+  ],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([-2.35556, 51.37885]),
+    zoom: 14
+  })
+});
+
+// =====================
+// FEATURES
+// =====================
+
+const source = new ol.source.Vector();
+
+DATA.forEach(row => {
+  const feature = new ol.Feature({
+    geometry: new ol.geom.Point(
+      ol.proj.fromLonLat([row.longitude, row.latitude])
+    ),
+    ...row   // attach all attributes
+  });
+
+  source.addFeature(feature);
+});
+
+function volumeToRadius(volume) {
+  return 4 + volume * 0.2;  // tweak to taste
+}
+
+
+const clusterSource = new ol.source.Cluster({
+  distance: 40,
+  source: source   // your original vector source
+});
+
+const clusterLayer = new ol.layer.Vector({
+  source: clusterSource,
+  style: feature => {
+    const features = feature.get('features');
+
+    // SINGLE FEATURE (no cluster)
+    if (features.length === 1) {
+      const f = features[0];
+      const volume = f.get('volume');
+      const firm = f.get('firm');
+
+      return new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: Math.max(5, Math.sqrt(volume)),
+          fill: new ol.style.Fill({ color: '#2563eb' }),
+          stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+        }),
+        text: new ol.style.Text({
+          text: `${firm}-${volume}`,
+          font: 'bold 13px Arial, sans-serif',
+          fill: new ol.style.Fill({ color: '#fff' }),
+          stroke: new ol.style.Stroke({ color: '#000', width: 4 }),
+          offsetY: -14
+        })
+      });
+    }
+
+    // CLUSTER (multiple features)
+    const totalVolume = features.reduce(
+      (sum, f) => sum + f.get('volume'),
+      0
+    );
+
+    return new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 12 + Math.log(totalVolume) * 3,
+        fill: new ol.style.Fill({ color: '#dc2626' }),
+        stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+      }),
+      text: new ol.style.Text({
+        text: totalVolume.toString(),
+        font: 'bold 14px Arial, sans-serif',
+        fill: new ol.style.Fill({ color: '#fff' }),
+        stroke: new ol.style.Stroke({ color: '#000', width: 4 })
+      })
+    });
+  }
+});
+
+map.addLayer(clusterLayer);
+
+
+const popupContainer = document.getElementById('popup');
+const popupContent = document.getElementById('popup-content');
+const popupCloser = document.getElementById('popup-closer');
+
+const popupOverlay = new ol.Overlay({
+  element: popupContainer,
+  autoPan: {
+    animation: { duration: 250 }
+  }
+});
+
+map.addOverlay(popupOverlay);
+
+popupCloser.onclick = () => {
+  popupOverlay.setPosition(undefined);
+  return false;
+};
+
+
+map.on('singleclick', evt => {
+  popupOverlay.setPosition(undefined);
+
+  map.forEachFeatureAtPixel(evt.pixel, feature => {
+    const props = feature.getProperties();
+    const coord = feature.getGeometry().getCoordinates();
+
+    popupContent.innerHTML = `
+      <b>${props.postcode}</b><br>
+      Firm: ${props.firm}<br>
+      Type: ${props.type}<br>
+      Volume: ${props.volume}
+    `;
+
+    popupOverlay.setPosition(coord);
+  });
+});
+
+
+</script>
+
+</body>
+</html>
