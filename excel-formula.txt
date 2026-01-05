@@ -1,0 +1,6 @@
+= "{postcode:""" & A2 &
+""",longitude:" & B2 &
+",latitude:" & C2 &
+",firm:""" & D2 &
+""",type:""" & E2 &
+""",volume:" & F2 & "},"
