@@ -32,6 +32,23 @@
     content: "✖";
     }
 
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .tab-btn {
+    padding: 2px 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .tab-btn:hover {
+    background: #eee;
+  }
+
+
   </style>
 </head>
 <body>
@@ -187,6 +204,7 @@ const popupContainer = document.getElementById('popup');
 const popupContent = document.getElementById('popup-content');
 const popupCloser = document.getElementById('popup-closer');
 
+
 const popupOverlay = new ol.Overlay({
   element: popupContainer,
   autoPan: {
@@ -201,24 +219,56 @@ popupCloser.onclick = () => {
   return false;
 };
 
+function renderPopup(features) {
+  // Create tab buttons
+  const tabs = features.map((f, i) => `
+    <button class="tab-btn" data-index="${i}">
+      ${f.get('firm')}
+    </button>
+  `).join('');
+
+  // Initial content (first feature)
+  const first = features[0];
+
+  return `
+    <div class="tabs">${tabs}</div>
+    <div id="tab-content">
+      ${renderFeature(first)}
+    </div>
+  `;
+}
+
+function renderFeature(feature) {
+  return `
+    <b>${feature.get('postcode')}</b><br>
+    Firm: ${feature.get('firm')}<br>
+    Type: ${feature.get('type')}<br>
+    Volume: ${feature.get('volume')}
+  `;
+}
+
 
 map.on('singleclick', evt => {
   popupOverlay.setPosition(undefined);
 
   map.forEachFeatureAtPixel(evt.pixel, feature => {
-    const props = feature.getProperties();
+    const features = feature.get('features') || [feature];
     const coord = feature.getGeometry().getCoordinates();
 
-    popupContent.innerHTML = `
-      <b>${props.postcode}</b><br>
-      Firm: ${props.firm}<br>
-      Type: ${props.type}<br>
-      Volume: ${props.volume}
-    `;
-
+    popupContent.innerHTML = renderPopup(features);
     popupOverlay.setPosition(coord);
+
+    // Wire up tab clicks
+    popupContent.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const index = e.target.dataset.index;
+        popupContent.querySelector('#tab-content').innerHTML =
+          renderFeature(features[index]);
+      });
+    });
   });
 });
+
 
 map.getView().fit(source.getExtent())
 
